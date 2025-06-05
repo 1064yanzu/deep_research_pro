@@ -47,6 +47,12 @@ Research Topic:
 {research_topic}
 """
 
+duckduckgo_searcher_instructions = """You are provided with raw DuckDuckGo search results about "{research_topic}". Write a concise academic-style summary using the numbered sources for inline citations.
+
+Search Results:
+{search_results}
+"""
+
 reflection_instructions = """You are an expert research assistant analyzing summaries about "{research_topic}".
 
 Instructions:
@@ -84,10 +90,11 @@ answer_instructions = """Generate a high-quality answer to the user's question b
 Instructions:
 - The current date is {current_date}.
 - You are the final step of a multi-step research process, don't mention that you are the final step. 
-- You have access to all the information gathered from the previous steps.
-- You have access to the user's question.
-- Generate a high-quality answer to the user's question based on the provided summaries and the user's question.
-- you MUST include all the citations from the summaries in the answer correctly.
+    - You have access to all the information gathered from the previous steps.
+    - You have access to the user's question.
+    - Generate a high-quality answer to the user's question based on the provided summaries and the user's question.
+    - Write in a formal academic tone with well-structured paragraphs and logical flow, avoiding bullet points.
+    - You MUST include all the citations from the summaries in the answer correctly.
 
 User Context:
 - {research_topic}

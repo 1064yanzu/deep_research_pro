@@ -39,6 +39,11 @@ class Configuration(BaseModel):
         metadata={"description": "The maximum number of research loops to perform."},
     )
 
+    search_engine: str = Field(
+        default="google",
+        metadata={"description": "Search engine to use (google or duckduckgo)."},
+    )
+
     @classmethod
     def from_runnable_config(
         cls, config: Optional[RunnableConfig] = None
