@@ -9,8 +9,9 @@ This project demonstrates a fullstack application using a React frontend and a L
 - 💬 Fullstack application with a React frontend and LangGraph backend.
 - 🧠 Powered by a LangGraph agent for advanced research and conversational AI.
 - 🔍 Dynamic search query generation using your choice of LLM (Gemini or OpenAI).
-- 🌐 Integrated web research via Google Search or DuckDuckGo.
+- 🌐 Integrated web research via Google Search or DuckDuckGo (selectable in the UI).
 - 🤔 Reflective reasoning to identify knowledge gaps and refine searches.
+- 🈶 Improved multilingual support—answers are returned in the same language as the question (including Chinese).
 - 📄 Generates answers with citations from gathered sources.
 - 🔄 Hot-reloading for both frontend and backend development during development.
 
@@ -29,10 +30,11 @@ Follow these steps to get the application running locally for development and te
 
 -   Node.js and npm (or yarn/pnpm)
 -   Python 3.8+
--   **`GEMINI_API_KEY`** or **`OPENAI_API_KEY`**: Provide keys for the model you want to use.
-    1.  Navigate to the `backend/` directory.
-    2.  Create a file named `.env` by copying the `backend/.env.example` file.
-    3.  Add your API key(s) to the `.env` file and optionally set `SEARCH_ENGINE` to `google` or `duckduckgo`.
+   -   **`GEMINI_API_KEY`** or **`OPENAI_API_KEY`**: Provide keys for the model you want to use.
+       1.  Navigate to the `backend/` directory.
+       2.  Create a file named `.env` by copying the `backend/.env.example` file.
+       3.  Add your API key(s) to the `.env` file and optionally set `SEARCH_ENGINE` to `google` or `duckduckgo`.
+       4.  You can also choose the model and search engine in the web interface when starting a new search.
 
 **2. Install Dependencies:**
 

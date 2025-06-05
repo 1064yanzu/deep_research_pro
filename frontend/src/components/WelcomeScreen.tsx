@@ -4,7 +4,8 @@ interface WelcomeScreenProps {
   handleSubmit: (
     submittedInputValue: string,
     effort: string,
-    model: string
+    model: string,
+    searchEngine: string
   ) => void;
   onCancel: () => void;
   isLoading: boolean;

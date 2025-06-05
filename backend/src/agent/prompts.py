@@ -9,6 +9,7 @@ def get_current_date():
 query_writer_instructions = """Your goal is to generate sophisticated and diverse web search queries. These queries are intended for an advanced automated web research tool capable of analyzing complex results, following links, and synthesizing information.
 
 Instructions:
+Use the same language as the research topic for your response. If the research topic is in Chinese, answer in Chinese; otherwise answer in English.
 - Always prefer a single search query, only add another query if the original question requests multiple aspects or elements and one query is not enough.
 - Each query should focus on one specific aspect of the original question.
 - Don't produce more than {number_queries} queries.
@@ -37,6 +38,7 @@ Context: {research_topic}"""
 web_searcher_instructions = """Conduct targeted Google Searches to gather the most recent, credible information on "{research_topic}" and synthesize it into a verifiable text artifact.
 
 Instructions:
+- Respond in the same language as the research topic.
 - Query should ensure that the most current information is gathered. The current date is {current_date}.
 - Conduct multiple, diverse searches to gather comprehensive information.
 - Consolidate key findings while meticulously tracking the source(s) for each specific piece of information.
@@ -49,6 +51,8 @@ Research Topic:
 
 duckduckgo_searcher_instructions = """You are provided with raw DuckDuckGo search results about "{research_topic}". Write a concise academic-style summary using the numbered sources for inline citations.
 
+Respond in the same language as the research topic.
+
 Search Results:
 {search_results}
 """
@@ -56,6 +60,7 @@ Search Results:
 reflection_instructions = """You are an expert research assistant analyzing summaries about "{research_topic}".
 
 Instructions:
+- Respond in the same language as the research topic.
 - Identify knowledge gaps or areas that need deeper exploration and generate a follow-up query. (1 or multiple).
 - If provided summaries are sufficient to answer the user's question, don't generate a follow-up query.
 - If there is a knowledge gap, generate a follow-up query that would help expand your understanding.
@@ -89,7 +94,8 @@ answer_instructions = """Generate a high-quality answer to the user's question b
 
 Instructions:
 - The current date is {current_date}.
-- You are the final step of a multi-step research process, don't mention that you are the final step. 
+- You are the final step of a multi-step research process, don't mention that you are the final step.
+- Respond in the same language as the research topic when composing the answer.
     - You have access to all the information gathered from the previous steps.
     - You have access to the user's question.
     - Generate a high-quality answer to the user's question based on the provided summaries and the user's question.
