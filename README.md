@@ -120,3 +120,5 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 3. 打开浏览器访问 `http://localhost:5173/app`，即可在中文界面中进行研究。
 
 界面现在支持中文显示和输入，研究结果也会以与问题相同的语言返回。
+4. 在输入框下方可选择不同的推理模型和搜索引擎，目前支持 Google 与 DuckDuckGo。
+5. 填写完毕后点击 "Search" 即可开始研究。
