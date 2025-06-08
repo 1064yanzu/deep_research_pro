@@ -24,12 +24,21 @@ def get_research_topic(messages: List[AnyMessage]) -> str:
 
 
 def get_chat_model(model: str, temperature: float = 0.0, max_retries: int = 2):
-    """Return a chat model from either Google Gemini or OpenAI based on the model name."""
+    """Return a chat model from either Google Gemini or OpenAI compatible provider."""
     if model.startswith("gpt-"):
         api_key = os.getenv("OPENAI_API_KEY")
         if api_key is None:
             raise ValueError("OPENAI_API_KEY is not set")
-        return ChatOpenAI(model=model, temperature=temperature, max_retries=max_retries, api_key=api_key)
+        base_url = os.getenv("OPENAI_API_BASE")
+        kwargs = {
+            "model": model,
+            "temperature": temperature,
+            "max_retries": max_retries,
+            "api_key": api_key,
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
     api_key = os.getenv("GEMINI_API_KEY")
     if api_key is None:
         raise ValueError("GEMINI_API_KEY is not set")

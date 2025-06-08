@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 
@@ -6,7 +7,9 @@ def get_current_date():
     return datetime.now().strftime("%B %d, %Y")
 
 
-query_writer_instructions = """Your goal is to generate sophisticated and diverse web search queries. These queries are intended for an advanced automated web research tool capable of analyzing complex results, following links, and synthesizing information.
+query_writer_instructions = os.getenv(
+    "QUERY_WRITER_PROMPT",
+    """Your goal is to generate sophisticated and diverse web search queries. These queries are intended for an advanced automated web research tool capable of analyzing complex results, following links, and synthesizing information.
 
 Instructions:
 Use the same language as the research topic for your response. If the research topic is in Chinese, answer in Chinese; otherwise answer in English.
@@ -32,10 +35,13 @@ Topic: What revenue grew more last year apple stock or the number of people buyi
 }}
 ```
 
-Context: {research_topic}"""
+Context: {research_topic}""",
+)
 
 
-web_searcher_instructions = """Conduct targeted Google Searches to gather the most recent, credible information on "{research_topic}" and synthesize it into a verifiable text artifact.
+web_searcher_instructions = os.getenv(
+    "WEB_SEARCHER_PROMPT",
+    """Conduct targeted Google Searches to gather the most recent, credible information on "{research_topic}" and synthesize it into a verifiable text artifact.
 
 Instructions:
 - Respond in the same language as the research topic.
@@ -47,17 +53,23 @@ Instructions:
 
 Research Topic:
 {research_topic}
-"""
+""",
+)
 
-duckduckgo_searcher_instructions = """You are provided with raw DuckDuckGo search results about "{research_topic}". Write a concise academic-style summary using the numbered sources for inline citations.
+duckduckgo_searcher_instructions = os.getenv(
+    "DUCKDUCKGO_SEARCHER_PROMPT",
+    """You are provided with raw DuckDuckGo search results about "{research_topic}". Write a concise academic-style summary using the numbered sources for inline citations.
 
 Respond in the same language as the research topic.
 
 Search Results:
 {search_results}
-"""
+""",
+)
 
-reflection_instructions = """You are an expert research assistant analyzing summaries about "{research_topic}".
+reflection_instructions = os.getenv(
+    "REFLECTION_PROMPT",
+    """You are an expert research assistant analyzing summaries about "{research_topic}".
 
 Instructions:
 - Respond in the same language as the research topic.
@@ -88,9 +100,12 @@ Reflect carefully on the Summaries to identify knowledge gaps and produce a foll
 
 Summaries:
 {summaries}
-"""
+""",
+)
 
-answer_instructions = """Generate a high-quality answer to the user's question based on the provided summaries.
+answer_instructions = os.getenv(
+    "ANSWER_PROMPT",
+    """Generate a high-quality answer to the user's question based on the provided summaries.
 
 Instructions:
 - The current date is {current_date}.
@@ -106,4 +121,5 @@ User Context:
 - {research_topic}
 
 Summaries:
-{summaries}"""
+{summaries}""",
+)

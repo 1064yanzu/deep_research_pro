@@ -30,11 +30,16 @@ Follow these steps to get the application running locally for development and te
 
 -   Node.js and npm (or yarn/pnpm)
 -   Python 3.8+
-   -   **`GEMINI_API_KEY`** or **`OPENAI_API_KEY`**: Provide keys for the model you want to use.
-       1.  Navigate to the `backend/` directory.
-       2.  Create a file named `.env` by copying the `backend/.env.example` file.
-       3.  Add your API key(s) to the `.env` file and optionally set `SEARCH_ENGINE` to `google` or `duckduckgo`.
-       4.  You can also choose the model and search engine in the web interface when starting a new search.
+  -   **`GEMINI_API_KEY`** or **`OPENAI_API_KEY`**: Provide keys for the model you want to use.
+      If you are using an OpenAI-compatible provider, you can also set
+      **`OPENAI_API_BASE`** to the provider's API endpoint.
+      1.  Navigate to the `backend/` directory.
+      2.  Create a file named `.env` by copying the `backend/.env.example` file.
+      3.  Add your API key(s) to the `.env` file and optionally set `SEARCH_ENGINE` to `google` or `duckduckgo`.
+      4.  You can also choose the model and search engine in the web interface when starting a new search.
+      5.  Optional: set `QUERY_WRITER_PROMPT`, `WEB_SEARCHER_PROMPT`,
+         `DUCKDUCKGO_SEARCHER_PROMPT`, `REFLECTION_PROMPT` and `ANSWER_PROMPT`
+         in your `.env` to tweak key instructions.
 
 **2. Install Dependencies:**
 
@@ -115,10 +120,11 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ### 快速开始
 
-1. 按照前文步骤在 `backend/.env` 中配置 `GEMINI_API_KEY` 或 `OPENAI_API_KEY`，并可设置 `SEARCH_ENGINE`。
+1. 按照前文步骤在 `backend/.env` 中配置 `GEMINI_API_KEY` 或 `OPENAI_API_KEY`，如使用其他兼容 OpenAI 的服务可设置 `OPENAI_API_BASE`，并可设置 `SEARCH_ENGINE`。
 2. 在项目根目录执行 `make dev` 启动前后端开发服务器。
 3. 打开浏览器访问 `http://localhost:5173/app`，即可在中文界面中进行研究。
 
 界面现在支持中文显示和输入，研究结果也会以与问题相同的语言返回。
 4. 在输入框下方可选择不同的推理模型和搜索引擎，目前支持 Google 与 DuckDuckGo。
-5. 填写完毕后点击 "Search" 即可开始研究。
+5. 如需自定义提示词，可在 `.env` 中设置 `QUERY_WRITER_PROMPT`、`WEB_SEARCHER_PROMPT`、`DUCKDUCKGO_SEARCHER_PROMPT`、`REFLECTION_PROMPT` 和 `ANSWER_PROMPT`。
+6. 填写完毕后点击 "Search" 即可开始研究。
