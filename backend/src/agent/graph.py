@@ -217,17 +217,18 @@ def evaluate_research(
     )
     if state["is_sufficient"] or state["research_loop_count"] >= max_research_loops:
         return "finalize_answer"
-    else:
-        return [
-            Send(
-                "web_research",
-                {
-                    "search_query": follow_up_query,
-                    "id": state["number_of_ran_queries"] + int(idx),
-                },
-            )
-            for idx, follow_up_query in enumerate(state["follow_up_queries"])
-        ]
+    if state["research_loop_count"] == 1:
+        return "ask_user"
+    return [
+        Send(
+            "web_research",
+            {
+                "search_query": follow_up_query,
+                "id": state["number_of_ran_queries"] + int(idx),
+            },
+        )
+        for idx, follow_up_query in enumerate(state["follow_up_queries"])
+    ]
 
 
 def finalize_answer(state: OverallState, config: RunnableConfig):
@@ -276,6 +277,23 @@ def finalize_answer(state: OverallState, config: RunnableConfig):
     }
 
 
+def ask_user(state: ReflectionState) -> OverallState:
+    """LangGraph node that asks the user which follow-up query to pursue."""
+
+    options = "\n".join(
+        f"{idx + 1}. {q}" for idx, q in enumerate(state["follow_up_queries"])
+    )
+    none_idx = len(state["follow_up_queries"]) + 1
+    extra_idx = none_idx + 1
+    question = (
+        "初步搜索结果仍有信息缺口，请从下列选项中选择下一步研究方向：\n"
+        f"{options}\n"
+        f"{none_idx}. 继续当前结果无需补充\n"
+        f"{extra_idx}. 我有其他补充要求"
+    )
+    return {"messages": [AIMessage(content=question)]}
+
+
 # Create our Agent Graph
 builder = StateGraph(OverallState, config_schema=Configuration)
 
@@ -284,6 +302,7 @@ builder.add_node("generate_query", generate_query)
 builder.add_node("web_research", web_research)
 builder.add_node("reflection", reflection)
 builder.add_node("finalize_answer", finalize_answer)
+builder.add_node("ask_user", ask_user)
 
 # Set the entrypoint as `generate_query`
 # This means that this node is the first one called
@@ -296,9 +315,10 @@ builder.add_conditional_edges(
 builder.add_edge("web_research", "reflection")
 # Evaluate the research
 builder.add_conditional_edges(
-    "reflection", evaluate_research, ["web_research", "finalize_answer"]
+    "reflection", evaluate_research, ["web_research", "finalize_answer", "ask_user"]
 )
 # Finalize the answer
 builder.add_edge("finalize_answer", END)
+builder.add_edge("ask_user", END)
 
 graph = builder.compile(name="pro-search-agent")

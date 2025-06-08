@@ -10,7 +10,7 @@ This project demonstrates a fullstack application using a React frontend and a L
 - 🧠 Powered by a LangGraph agent for advanced research and conversational AI.
 - 🔍 Dynamic search query generation using your choice of LLM (Gemini or OpenAI).
 - 🌐 Integrated web research via Google Search or DuckDuckGo (selectable in the UI).
-- 🤔 Reflective reasoning to identify knowledge gaps and refine searches.
+- 🤔 Reflective reasoning to identify knowledge gaps and refine searches. After the first round, the assistant asks a multiple-choice follow-up question.
 - 🈶 Improved multilingual support—answers are returned in the same language as the question (including Chinese).
 - 📄 Generates answers with citations from gathered sources.
 - 🔄 Hot-reloading for both frontend and backend development during development.
@@ -116,7 +116,7 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## 中文说明
 
-该项目提供一个结合 React 前端和 LangGraph 后端的自动化研究系统。用户可以在界面中选择研究主题、模型及搜索引擎，并通过选择题的方式补充额外需求。
+该项目提供一个结合 React 前端和 LangGraph 后端的自动化研究系统。用户首先输入研究主题，初步搜索结束后系统会以选择题的形式提出进一步的研究方向或补充要求。界面还允许选择模型和搜索引擎。
 
 ### 快速开始
 
@@ -127,4 +127,4 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 界面现在支持中文显示和输入，研究结果也会以与问题相同的语言返回。
 4. 在输入框下方可选择不同的推理模型和搜索引擎，目前支持 Google 与 DuckDuckGo。
 5. 如需自定义提示词，可在 `.env` 中设置 `QUERY_WRITER_PROMPT`、`WEB_SEARCHER_PROMPT`、`DUCKDUCKGO_SEARCHER_PROMPT`、`REFLECTION_PROMPT` 和 `ANSWER_PROMPT`。
-6. 填写完毕后点击 "Search" 即可开始研究。
+6. 填写完毕后点击 "Search" 开始研究，初步结果返回后会出现选择题让你决定是否继续深挖或补充需求。

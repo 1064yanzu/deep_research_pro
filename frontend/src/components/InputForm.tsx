@@ -1,15 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  SquarePen,
-  Brain,
-  Send,
-  StopCircle,
-  Zap,
-  Cpu,
-  Search,
-  PlusCircle,
-} from "lucide-react";
+import { SquarePen, Brain, Send, StopCircle, Zap, Cpu, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -18,13 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const questionMap: Record<string, string> = {
-  ai: "近年人工智能的发展趋势",
-  sustainability: "可持续发展领域的最新研究",
-  economy: "国际经济形势分析",
-  custom: "",
-};
 
 // Updated InputFormProps
 interface InputFormProps {
@@ -45,30 +29,16 @@ export const InputForm: React.FC<InputFormProps> = ({
   isLoading,
   hasHistory,
 }) => {
-  const [selectedTopic, setSelectedTopic] = useState("ai");
-  const [hasAdditional, setHasAdditional] = useState("no");
-  const [customQuery, setCustomQuery] = useState("");
-  const [additionalReq, setAdditionalReq] = useState("");
+  const [internalInputValue, setInternalInputValue] = useState("");
   const [effort, setEffort] = useState("medium");
   const [model, setModel] = useState("gemini-2.5-flash-preview-04-17");
   const [searchEngine, setSearchEngine] = useState("google");
 
   const handleInternalSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    let topicText = "";
-    if (selectedTopic === "custom") {
-      if (!customQuery.trim()) return;
-      topicText = customQuery.trim();
-    } else {
-      topicText = questionMap[selectedTopic];
-    }
-    let finalText = topicText;
-    if (hasAdditional === "yes" && additionalReq.trim()) {
-      finalText += " " + additionalReq.trim();
-    }
-    onSubmit(finalText, effort, model, searchEngine);
-    setCustomQuery("");
-    setAdditionalReq("");
+    if (!internalInputValue.trim()) return;
+    onSubmit(internalInputValue, effort, model, searchEngine);
+    setInternalInputValue("");
   };
 
   const handleInternalKeyDown = (
@@ -80,72 +50,27 @@ export const InputForm: React.FC<InputFormProps> = ({
     }
   };
 
-  const isSubmitDisabled =
-    (selectedTopic === "custom" && !customQuery.trim()) || isLoading;
+  const isSubmitDisabled = !internalInputValue.trim() || isLoading;
 
   return (
     <form
       onSubmit={handleInternalSubmit}
       className={`flex flex-col gap-2 p-3 `}
     >
-      <div className="flex flex-col gap-2 bg-neutral-700 rounded-3xl p-3 text-white">
-        <div className="flex flex-row items-center text-sm gap-2">
-          <Brain className="h-4 w-4" /> 选择研究主题
-        </div>
-        <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-          <SelectTrigger className="w-full bg-neutral-800 border-neutral-600 cursor-pointer">
-            <SelectValue placeholder="请选择研究主题" />
-          </SelectTrigger>
-          <SelectContent className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer">
-            <SelectItem value="ai" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              近年人工智能的发展趋势
-            </SelectItem>
-            <SelectItem value="sustainability" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              可持续发展领域的最新研究
-            </SelectItem>
-            <SelectItem value="economy" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              国际经济形势分析
-            </SelectItem>
-            <SelectItem value="custom" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              自定义问题
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        {selectedTopic === "custom" && (
-          <Textarea
-            value={customQuery}
-            onChange={(e) => setCustomQuery(e.target.value)}
-            onKeyDown={handleInternalKeyDown}
-            placeholder="请输入自定义问题"
-            className="w-full text-neutral-100 placeholder-neutral-500 resize-none border-0 focus:outline-none focus:ring-0 outline-none focus-visible:ring-0 shadow-none md:text-base min-h-[56px] max-h-[200px]"
-            rows={2}
-          />
-        )}
-        <div className="flex flex-row items-center text-sm gap-2 mt-2">
-          <PlusCircle className="h-4 w-4" /> 是否有补充要求?
-        </div>
-        <Select value={hasAdditional} onValueChange={setHasAdditional}>
-          <SelectTrigger className="w-full bg-neutral-800 border-neutral-600 cursor-pointer">
-            <SelectValue placeholder="选择是否有补充要求" />
-          </SelectTrigger>
-          <SelectContent className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer">
-            <SelectItem value="no" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              无
-            </SelectItem>
-            <SelectItem value="yes" className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer">
-              有
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        {hasAdditional === "yes" && (
-          <Textarea
-            value={additionalReq}
-            onChange={(e) => setAdditionalReq(e.target.value)}
-            placeholder="请输入补充要求"
-            className="w-full text-neutral-100 placeholder-neutral-500 resize-none border-0 focus:outline-none focus:ring-0 outline-none focus-visible:ring-0 shadow-none md:text-base min-h-[56px] max-h-[200px]"
-            rows={2}
-          />
-        )}
+      <div
+        className={`flex flex-row items-center justify-between text-white rounded-3xl rounded-bl-sm ${
+          hasHistory ? "rounded-br-sm" : ""
+        } break-words min-h-7 bg-neutral-700 px-4 pt-3 `}
+      >
+        <Textarea
+          value={internalInputValue}
+          onChange={(e) => setInternalInputValue(e.target.value)}
+          onKeyDown={handleInternalKeyDown}
+          placeholder="Who won the Euro 2024 and scored the most goals?"
+          className={`w-full text-neutral-100 placeholder-neutral-500 resize-none border-0 focus:outline-none focus:ring-0 outline-none focus-visible:ring-0 shadow-none 
+                        md:text-base  min-h-[56px] max-h-[200px]`}
+          rows={1}
+        />
         <div className="-mt-3">
           {isLoading ? (
             <Button
@@ -258,34 +183,34 @@ export const InputForm: React.FC<InputFormProps> = ({
                   </div>
                 </SelectItem>
               </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-row gap-2 bg-neutral-700 border-neutral-600 text-neutral-300 focus:ring-neutral-500 rounded-xl rounded-t-sm pl-2  max-w-[100%] sm:max-w-[90%]">
-          <div className="flex flex-row items-center text-sm ml-2">
-            <Search className="h-4 w-4 mr-2" />
-            Engine
+            </Select>
           </div>
-          <Select value={searchEngine} onValueChange={setSearchEngine}>
-            <SelectTrigger className="w-[150px] bg-transparent border-none cursor-pointer">
-              <SelectValue placeholder="Engine" />
-            </SelectTrigger>
-            <SelectContent className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer">
-              <SelectItem
-                value="google"
-                className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
-              >
-                Google
-              </SelectItem>
-              <SelectItem
-                value="duckduckgo"
-                className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
-              >
-                DuckDuckGo
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-row gap-2 bg-neutral-700 border-neutral-600 text-neutral-300 focus:ring-neutral-500 rounded-xl rounded-t-sm pl-2  max-w-[100%] sm:max-w-[90%]">
+            <div className="flex flex-row items-center text-sm ml-2">
+              <Search className="h-4 w-4 mr-2" />
+              Engine
+            </div>
+            <Select value={searchEngine} onValueChange={setSearchEngine}>
+              <SelectTrigger className="w-[150px] bg-transparent border-none cursor-pointer">
+                <SelectValue placeholder="Engine" />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer">
+                <SelectItem
+                  value="google"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  Google
+                </SelectItem>
+                <SelectItem
+                  value="duckduckgo"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  DuckDuckGo
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
         {hasHistory && (
           <Button
             className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer rounded-xl rounded-t-sm pl-2 "
