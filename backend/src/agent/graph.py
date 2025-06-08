@@ -1,36 +1,35 @@
 import os
 
-from agent.tools_and_schemas import SearchQueryList, Reflection
 from dotenv import load_dotenv
-from langchain_core.messages import AIMessage
-from langgraph.types import Send
-from langgraph.graph import StateGraph
-from langgraph.graph import START, END
-from langchain_core.runnables import RunnableConfig
+from duckduckgo_search import DDGS
 from google.genai import Client
+from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 
+from agent.configuration import Configuration
+from agent.prompts import (
+    answer_instructions,
+    duckduckgo_searcher_instructions,
+    get_current_date,
+    query_writer_instructions,
+    reflection_instructions,
+    web_searcher_instructions,
+)
 from agent.state import (
     OverallState,
     QueryGenerationState,
     ReflectionState,
     WebSearchState,
 )
-from agent.configuration import Configuration
-from agent.prompts import (
-    get_current_date,
-    query_writer_instructions,
-    web_searcher_instructions,
-    duckduckgo_searcher_instructions,
-    reflection_instructions,
-    answer_instructions,
-)
-from duckduckgo_search import DDGS
+from agent.tools_and_schemas import Reflection, SearchQueryList
 from agent.utils import (
+    get_chat_model,
     get_citations,
     get_research_topic,
     insert_citation_markers,
     resolve_urls,
-    get_chat_model,
 )
 
 load_dotenv()
