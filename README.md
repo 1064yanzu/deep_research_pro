@@ -107,4 +107,16 @@ Open your browser and navigate to `http://localhost:8123/app/` to see the applic
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+## 中文说明
+
+该项目提供一个结合 React 前端和 LangGraph 后端的自动化研究系统。用户可以在界面中选择研究主题、模型及搜索引擎，并通过选择题的方式补充额外需求。
+
+### 快速开始
+
+1. 按照前文步骤在 `backend/.env` 中配置 `GEMINI_API_KEY` 或 `OPENAI_API_KEY`，并可设置 `SEARCH_ENGINE`。
+2. 在项目根目录执行 `make dev` 启动前后端开发服务器。
+3. 打开浏览器访问 `http://localhost:5173/app`，即可在中文界面中进行研究。
+
+界面现在支持中文显示和输入，研究结果也会以与问题相同的语言返回。
