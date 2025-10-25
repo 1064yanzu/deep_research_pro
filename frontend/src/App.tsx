@@ -103,7 +103,12 @@ export default function App() {
   }, [thread.messages, thread.isLoading, processedEventsTimeline]);
 
   const handleSubmit = useCallback(
-    (submittedInputValue: string, effort: string, model: string) => {
+    (
+      submittedInputValue: string,
+      effort: string,
+      model: string,
+      searchEngine: string
+    ) => {
       if (!submittedInputValue.trim()) return;
       setProcessedEventsTimeline([]);
       hasFinalizeEventOccurredRef.current = false;
@@ -142,6 +147,7 @@ export default function App() {
         initial_search_query_count: initial_search_query_count,
         max_research_loops: max_research_loops,
         reasoning_model: model,
+        search_engine: searchEngine,
       });
     },
     [thread]
@@ -153,7 +159,10 @@ export default function App() {
   }, [thread]);
 
   return (
-    <div className="flex h-screen bg-neutral-800 text-neutral-100 font-sans antialiased">
+    <div className="flex h-screen flex-col bg-neutral-800 text-neutral-100 font-sans antialiased">
+      <header className="sticky top-0 z-10 w-full bg-neutral-900 py-3 text-center shadow-md">
+        <h1 className="text-lg font-semibold tracking-wide">Pro Research Agent</h1>
+      </header>
       <main className="flex-1 flex flex-col overflow-hidden max-w-4xl mx-auto w-full">
         <div
           className={`flex-1 overflow-y-auto ${

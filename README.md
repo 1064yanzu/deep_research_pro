@@ -1,6 +1,6 @@
 # Gemini Fullstack LangGraph Quickstart
 
-This project demonstrates a fullstack application using a React frontend and a LangGraph-powered backend agent. The agent is designed to perform comprehensive research on a user's query by dynamically generating search terms, querying the web using Google Search, reflecting on the results to identify knowledge gaps, and iteratively refining its search until it can provide a well-supported answer with citations. This application serves as an example of building research-augmented conversational AI using LangGraph and Google's Gemini models.
+This project demonstrates a fullstack application using a React frontend and a LangGraph-powered backend agent. The agent performs comprehensive research on a user's query by dynamically generating search terms, querying the web using various search engines, reflecting on the results to identify knowledge gaps, and iteratively refining its search until it can provide a well-supported answer with citations. It supports multiple large language models so you can choose between Gemini and OpenAI models.
 
 ![Gemini Fullstack LangGraph](./app.png)
 
@@ -8,9 +8,10 @@ This project demonstrates a fullstack application using a React frontend and a L
 
 - 💬 Fullstack application with a React frontend and LangGraph backend.
 - 🧠 Powered by a LangGraph agent for advanced research and conversational AI.
-- 🔍 Dynamic search query generation using Google Gemini models.
-- 🌐 Integrated web research via Google Search API.
-- 🤔 Reflective reasoning to identify knowledge gaps and refine searches.
+- 🔍 Dynamic search query generation using your choice of LLM (Gemini or OpenAI).
+- 🌐 Integrated web research via Google Search or DuckDuckGo (selectable in the UI).
+- 🤔 Reflective reasoning to identify knowledge gaps and refine searches. After the first round, the assistant asks a multiple-choice follow-up question.
+- 🈶 Improved multilingual support—answers are returned in the same language as the question (including Chinese).
 - 📄 Generates answers with citations from gathered sources.
 - 🔄 Hot-reloading for both frontend and backend development during development.
 
@@ -29,10 +30,16 @@ Follow these steps to get the application running locally for development and te
 
 -   Node.js and npm (or yarn/pnpm)
 -   Python 3.8+
--   **`GEMINI_API_KEY`**: The backend agent requires a Google Gemini API key.
-    1.  Navigate to the `backend/` directory.
-    2.  Create a file named `.env` by copying the `backend/.env.example` file.
-    3.  Open the `.env` file and add your Gemini API key: `GEMINI_API_KEY="YOUR_ACTUAL_API_KEY"`
+  -   **`GEMINI_API_KEY`** or **`OPENAI_API_KEY`**: Provide keys for the model you want to use.
+      If you are using an OpenAI-compatible provider, you can also set
+      **`OPENAI_API_BASE`** to the provider's API endpoint.
+      1.  Navigate to the `backend/` directory.
+      2.  Create a file named `.env` by copying the `backend/.env.example` file.
+      3.  Add your API key(s) to the `.env` file and optionally set `SEARCH_ENGINE` to `google` or `duckduckgo`.
+      4.  You can also choose the model and search engine in the web interface when starting a new search.
+      5.  Optional: set `QUERY_WRITER_PROMPT`, `WEB_SEARCHER_PROMPT`,
+         `DUCKDUCKGO_SEARCHER_PROMPT`, `REFLECTION_PROMPT` and `ANSWER_PROMPT`
+         in your `.env` to tweak key instructions.
 
 **2. Install Dependencies:**
 
@@ -67,9 +74,9 @@ The core of the backend is a LangGraph agent defined in `backend/src/agent/graph
 
 ![Agent Flow](./agent.png)
 
-1.  **Generate Initial Queries:** Based on your input, it generates a set of initial search queries using a Gemini model.
-2.  **Web Research:** For each query, it uses the Gemini model with the Google Search API to find relevant web pages.
-3.  **Reflection & Knowledge Gap Analysis:** The agent analyzes the search results to determine if the information is sufficient or if there are knowledge gaps. It uses a Gemini model for this reflection process.
+1.  **Generate Initial Queries:** Based on your input, it generates a set of initial search queries using your selected model.
+2.  **Web Research:** For each query, it calls either the Google Search API or DuckDuckGo and summarizes the results with the chosen LLM.
+3.  **Reflection & Knowledge Gap Analysis:** The agent analyzes the search results to determine if the information is sufficient or if there are knowledge gaps. It uses your chosen model for this reflection process.
 4.  **Iterative Refinement:** If gaps are found or the information is insufficient, it generates follow-up queries and repeats the web research and reflection steps (up to a configured maximum number of loops).
 5.  **Finalize Answer:** Once the research is deemed sufficient, the agent synthesizes the gathered information into a coherent answer, including citations from the web sources, using a Gemini model.
 
@@ -105,4 +112,19 @@ Open your browser and navigate to `http://localhost:8123/app/` to see the applic
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+## 中文说明
+
+该项目提供一个结合 React 前端和 LangGraph 后端的自动化研究系统。用户首先输入研究主题，初步搜索结束后系统会以选择题的形式提出进一步的研究方向或补充要求。界面还允许选择模型和搜索引擎。
+
+### 快速开始
+
+1. 按照前文步骤在 `backend/.env` 中配置 `GEMINI_API_KEY` 或 `OPENAI_API_KEY`，如使用其他兼容 OpenAI 的服务可设置 `OPENAI_API_BASE`，并可设置 `SEARCH_ENGINE`。
+2. 在项目根目录执行 `make dev` 启动前后端开发服务器。
+3. 打开浏览器访问 `http://localhost:5173/app`，即可在中文界面中进行研究。
+
+界面现在支持中文显示和输入，研究结果也会以与问题相同的语言返回。
+4. 在输入框下方可选择不同的推理模型和搜索引擎，目前支持 Google 与 DuckDuckGo。
+5. 如需自定义提示词，可在 `.env` 中设置 `QUERY_WRITER_PROMPT`、`WEB_SEARCHER_PROMPT`、`DUCKDUCKGO_SEARCHER_PROMPT`、`REFLECTION_PROMPT` 和 `ANSWER_PROMPT`。
+6. 填写完毕后点击 "Search" 开始研究，初步结果返回后会出现选择题让你决定是否继续深挖或补充需求。

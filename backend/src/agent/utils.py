@@ -1,5 +1,9 @@
+import os
 from typing import Any, Dict, List
-from langchain_core.messages import AnyMessage, AIMessage, HumanMessage
+
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 
 def get_research_topic(messages: List[AnyMessage]) -> str:
@@ -19,12 +23,34 @@ def get_research_topic(messages: List[AnyMessage]) -> str:
     return research_topic
 
 
+def get_chat_model(model: str, temperature: float = 0.0, max_retries: int = 2):
+    """Return a chat model from either Google Gemini or OpenAI compatible provider."""
+    if model.startswith("gpt-"):
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key is None:
+            raise ValueError("OPENAI_API_KEY is not set")
+        base_url = os.getenv("OPENAI_API_BASE")
+        kwargs = {
+            "model": model,
+            "temperature": temperature,
+            "max_retries": max_retries,
+            "api_key": api_key,
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key is None:
+        raise ValueError("GEMINI_API_KEY is not set")
+    return ChatGoogleGenerativeAI(model=model, temperature=temperature, max_retries=max_retries, api_key=api_key)
+
+
 def resolve_urls(urls_to_resolve: List[Any], id: int) -> Dict[str, str]:
     """
     Create a map of the vertex ai search urls (very long) to a short url with a unique id for each url.
     Ensures each original URL gets a consistent shortened form while maintaining uniqueness.
     """
-    prefix = f"https://vertexaisearch.cloud.google.com/id/"
+    prefix = "https://vertexaisearch.cloud.google.com/id/"
     urls = [site.web.uri for site in urls_to_resolve]
 
     # Create a dictionary that maps each unique URL to its first occurrence index

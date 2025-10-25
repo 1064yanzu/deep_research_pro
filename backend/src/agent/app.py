@@ -1,8 +1,11 @@
 # mypy: disable - error - code = "no-untyped-def,misc"
+"""FastAPI application serving the LangGraph agent and frontend."""
+import logging
 import pathlib
+
+import fastapi.exceptions
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
-import fastapi.exceptions
 
 # Define the FastAPI app
 app = FastAPI()
@@ -21,8 +24,9 @@ def create_frontend_router(build_dir="../frontend/dist"):
     static_files_path = build_path / "assets"  # Vite uses 'assets' subdir
 
     if not build_path.is_dir() or not (build_path / "index.html").is_file():
-        print(
-            f"WARN: Frontend build directory not found or incomplete at {build_path}. Serving frontend will likely fail."
+        logging.warning(
+            "WARN: Frontend build directory not found or incomplete at %s. Serving frontend will likely fail.",
+            build_path,
         )
         # Return a dummy router if build isn't ready
         from starlette.routing import Route

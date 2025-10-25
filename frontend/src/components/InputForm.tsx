@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Brain, Send, StopCircle, Zap, Cpu } from "lucide-react";
+import { SquarePen, Brain, Send, StopCircle, Zap, Cpu, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -12,7 +12,12 @@ import {
 
 // Updated InputFormProps
 interface InputFormProps {
-  onSubmit: (inputValue: string, effort: string, model: string) => void;
+  onSubmit: (
+    inputValue: string,
+    effort: string,
+    model: string,
+    searchEngine: string
+  ) => void;
   onCancel: () => void;
   isLoading: boolean;
   hasHistory: boolean;
@@ -27,11 +32,12 @@ export const InputForm: React.FC<InputFormProps> = ({
   const [internalInputValue, setInternalInputValue] = useState("");
   const [effort, setEffort] = useState("medium");
   const [model, setModel] = useState("gemini-2.5-flash-preview-04-17");
+  const [searchEngine, setSearchEngine] = useState("google");
 
   const handleInternalSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!internalInputValue.trim()) return;
-    onSubmit(internalInputValue, effort, model);
+    onSubmit(internalInputValue, effort, model, searchEngine);
     setInternalInputValue("");
   };
 
@@ -159,6 +165,47 @@ export const InputForm: React.FC<InputFormProps> = ({
                   <div className="flex items-center">
                     <Cpu className="h-4 w-4 mr-2 text-purple-400" /> 2.5 Pro
                   </div>
+                </SelectItem>
+                <SelectItem
+                  value="gpt-3.5-turbo"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  <div className="flex items-center">
+                    <Cpu className="h-4 w-4 mr-2 text-green-400" /> GPT-3.5 Turbo
+                  </div>
+                </SelectItem>
+                <SelectItem
+                  value="gpt-4o"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  <div className="flex items-center">
+                    <Cpu className="h-4 w-4 mr-2 text-blue-400" /> GPT-4o
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-row gap-2 bg-neutral-700 border-neutral-600 text-neutral-300 focus:ring-neutral-500 rounded-xl rounded-t-sm pl-2  max-w-[100%] sm:max-w-[90%]">
+            <div className="flex flex-row items-center text-sm ml-2">
+              <Search className="h-4 w-4 mr-2" />
+              Engine
+            </div>
+            <Select value={searchEngine} onValueChange={setSearchEngine}>
+              <SelectTrigger className="w-[150px] bg-transparent border-none cursor-pointer">
+                <SelectValue placeholder="Engine" />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-700 border-neutral-600 text-neutral-300 cursor-pointer">
+                <SelectItem
+                  value="google"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  Google
+                </SelectItem>
+                <SelectItem
+                  value="duckduckgo"
+                  className="hover:bg-neutral-600 focus:bg-neutral-600 cursor-pointer"
+                >
+                  DuckDuckGo
                 </SelectItem>
               </SelectContent>
             </Select>

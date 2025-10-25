@@ -1,30 +1,31 @@
 import os
 
-from agent.tools_and_schemas import SearchQueryList, Reflection
 from dotenv import load_dotenv
-from langchain_core.messages import AIMessage
-from langgraph.types import Send
-from langgraph.graph import StateGraph
-from langgraph.graph import START, END
-from langchain_core.runnables import RunnableConfig
+from duckduckgo_search import DDGS
 from google.genai import Client
+from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableConfig
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Send
 
+from agent.configuration import Configuration
+from agent.prompts import (
+    answer_instructions,
+    duckduckgo_searcher_instructions,
+    get_current_date,
+    query_writer_instructions,
+    reflection_instructions,
+    web_searcher_instructions,
+)
 from agent.state import (
     OverallState,
     QueryGenerationState,
     ReflectionState,
     WebSearchState,
 )
-from agent.configuration import Configuration
-from agent.prompts import (
-    get_current_date,
-    query_writer_instructions,
-    web_searcher_instructions,
-    reflection_instructions,
-    answer_instructions,
-)
-from langchain_google_genai import ChatGoogleGenerativeAI
+from agent.tools_and_schemas import Reflection, SearchQueryList
 from agent.utils import (
+    get_chat_model,
     get_citations,
     get_research_topic,
     insert_citation_markers,
@@ -33,11 +34,12 @@ from agent.utils import (
 
 load_dotenv()
 
-if os.getenv("GEMINI_API_KEY") is None:
-    raise ValueError("GEMINI_API_KEY is not set")
+if os.getenv("GEMINI_API_KEY") is None and os.getenv("OPENAI_API_KEY") is None:
+    raise ValueError("GEMINI_API_KEY or OPENAI_API_KEY must be set")
 
-# Used for Google Search API
-genai_client = Client(api_key=os.getenv("GEMINI_API_KEY"))
+genai_client = None
+if os.getenv("GEMINI_API_KEY") is not None:
+    genai_client = Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 # Nodes
@@ -60,12 +62,10 @@ def generate_query(state: OverallState, config: RunnableConfig) -> QueryGenerati
     if state.get("initial_search_query_count") is None:
         state["initial_search_query_count"] = configurable.number_of_initial_queries
 
-    # init Gemini 2.0 Flash
-    llm = ChatGoogleGenerativeAI(
+    llm = get_chat_model(
         model=configurable.query_generator_model,
         temperature=1.0,
         max_retries=2,
-        api_key=os.getenv("GEMINI_API_KEY"),
     )
     structured_llm = llm.with_structured_output(SearchQueryList)
 
@@ -106,28 +106,43 @@ def web_research(state: WebSearchState, config: RunnableConfig) -> OverallState:
     """
     # Configure
     configurable = Configuration.from_runnable_config(config)
-    formatted_prompt = web_searcher_instructions.format(
-        current_date=get_current_date(),
-        research_topic=state["search_query"],
-    )
+    if configurable.search_engine == "google":
+        if genai_client is None:
+            raise ValueError("GEMINI_API_KEY is required for Google search")
+        formatted_prompt = web_searcher_instructions.format(
+            current_date=get_current_date(),
+            research_topic=state["search_query"],
+        )
 
-    # Uses the google genai client as the langchain client doesn't return grounding metadata
-    response = genai_client.models.generate_content(
-        model=configurable.query_generator_model,
-        contents=formatted_prompt,
-        config={
-            "tools": [{"google_search": {}}],
-            "temperature": 0,
-        },
-    )
-    # resolve the urls to short urls for saving tokens and time
-    resolved_urls = resolve_urls(
-        response.candidates[0].grounding_metadata.grounding_chunks, state["id"]
-    )
-    # Gets the citations and adds them to the generated text
-    citations = get_citations(response, resolved_urls)
-    modified_text = insert_citation_markers(response.text, citations)
-    sources_gathered = [item for citation in citations for item in citation["segments"]]
+        response = genai_client.models.generate_content(
+            model=configurable.query_generator_model,
+            contents=formatted_prompt,
+            config={
+                "tools": [{"google_search": {}}],
+                "temperature": 0,
+            },
+        )
+        resolved_urls = resolve_urls(
+            response.candidates[0].grounding_metadata.grounding_chunks, state["id"]
+        )
+        citations = get_citations(response, resolved_urls)
+        modified_text = insert_citation_markers(response.text, citations)
+        sources_gathered = [item for citation in citations for item in citation["segments"]]
+    else:
+        with DDGS() as ddgs:
+            results = list(ddgs.text(state["search_query"], max_results=5))
+        search_results = ""
+        sources_gathered = []
+        for idx, r in enumerate(results, start=1):
+            marker = f"[{idx}]"
+            search_results += f"{idx}. {r['title']} ({marker})\n{r['body']}\n\n"
+            sources_gathered.append({"label": r["title"], "short_url": marker, "value": r["href"]})
+        formatted_prompt = duckduckgo_searcher_instructions.format(
+            research_topic=state["search_query"],
+            search_results=search_results,
+        )
+        llm = get_chat_model(configurable.query_generator_model, temperature=0)
+        modified_text = llm.invoke(formatted_prompt).content
 
     return {
         "sources_gathered": sources_gathered,
@@ -162,12 +177,10 @@ def reflection(state: OverallState, config: RunnableConfig) -> ReflectionState:
         research_topic=get_research_topic(state["messages"]),
         summaries="\n\n---\n\n".join(state["web_research_result"]),
     )
-    # init Reasoning Model
-    llm = ChatGoogleGenerativeAI(
+    llm = get_chat_model(
         model=reasoning_model,
         temperature=1.0,
         max_retries=2,
-        api_key=os.getenv("GEMINI_API_KEY"),
     )
     result = llm.with_structured_output(Reflection).invoke(formatted_prompt)
 
@@ -204,17 +217,18 @@ def evaluate_research(
     )
     if state["is_sufficient"] or state["research_loop_count"] >= max_research_loops:
         return "finalize_answer"
-    else:
-        return [
-            Send(
-                "web_research",
-                {
-                    "search_query": follow_up_query,
-                    "id": state["number_of_ran_queries"] + int(idx),
-                },
-            )
-            for idx, follow_up_query in enumerate(state["follow_up_queries"])
-        ]
+    if state["research_loop_count"] == 1:
+        return "ask_user"
+    return [
+        Send(
+            "web_research",
+            {
+                "search_query": follow_up_query,
+                "id": state["number_of_ran_queries"] + int(idx),
+            },
+        )
+        for idx, follow_up_query in enumerate(state["follow_up_queries"])
+    ]
 
 
 def finalize_answer(state: OverallState, config: RunnableConfig):
@@ -241,12 +255,10 @@ def finalize_answer(state: OverallState, config: RunnableConfig):
         summaries="\n---\n\n".join(state["web_research_result"]),
     )
 
-    # init Reasoning Model, default to Gemini 2.5 Flash
-    llm = ChatGoogleGenerativeAI(
+    llm = get_chat_model(
         model=reasoning_model,
         temperature=0,
         max_retries=2,
-        api_key=os.getenv("GEMINI_API_KEY"),
     )
     result = llm.invoke(formatted_prompt)
 
@@ -265,6 +277,23 @@ def finalize_answer(state: OverallState, config: RunnableConfig):
     }
 
 
+def ask_user(state: ReflectionState) -> OverallState:
+    """LangGraph node that asks the user which follow-up query to pursue."""
+
+    options = "\n".join(
+        f"{idx + 1}. {q}" for idx, q in enumerate(state["follow_up_queries"])
+    )
+    none_idx = len(state["follow_up_queries"]) + 1
+    extra_idx = none_idx + 1
+    question = (
+        "初步搜索结果仍有信息缺口，请从下列选项中选择下一步研究方向：\n"
+        f"{options}\n"
+        f"{none_idx}. 继续当前结果无需补充\n"
+        f"{extra_idx}. 我有其他补充要求"
+    )
+    return {"messages": [AIMessage(content=question)]}
+
+
 # Create our Agent Graph
 builder = StateGraph(OverallState, config_schema=Configuration)
 
@@ -273,6 +302,7 @@ builder.add_node("generate_query", generate_query)
 builder.add_node("web_research", web_research)
 builder.add_node("reflection", reflection)
 builder.add_node("finalize_answer", finalize_answer)
+builder.add_node("ask_user", ask_user)
 
 # Set the entrypoint as `generate_query`
 # This means that this node is the first one called
@@ -285,9 +315,10 @@ builder.add_conditional_edges(
 builder.add_edge("web_research", "reflection")
 # Evaluate the research
 builder.add_conditional_edges(
-    "reflection", evaluate_research, ["web_research", "finalize_answer"]
+    "reflection", evaluate_research, ["web_research", "finalize_answer", "ask_user"]
 )
 # Finalize the answer
 builder.add_edge("finalize_answer", END)
+builder.add_edge("ask_user", END)
 
 graph = builder.compile(name="pro-search-agent")
